@@ -1,0 +1,12 @@
+services:
+  mdtopdf:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: mdtopdf:latest
+    container_name: mdtopdf
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production

@@ -6,6 +6,7 @@ A frontend-only Markdown to PDF converter with live preview. Built with React 19
 ![React 19](https://img.shields.io/badge/react-19-61dafb)
 ![TypeScript](https://img.shields.io/badge/typescript-5.9-3178c6)
 ![Vite](https://img.shields.io/badge/vite-7-646cff)
+![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker)
 
 ## ✨ Features
 
@@ -19,6 +20,8 @@ A frontend-only Markdown to PDF converter with live preview. Built with React 19
 - 📱 **No Server Required** - Runs entirely in the browser
 
 ## 🚀 Quick Start
+
+### Local Development
 
 ```bash
 # Install dependencies
@@ -35,6 +38,76 @@ npm run preview
 ```
 
 Visit `http://localhost:5173` to use the application.
+
+### 🐳 Docker
+
+#### Build and Run with Docker
+
+```bash
+# Build the Docker image
+docker build -t mdtopdf .
+
+# Run the container
+docker run -d -p 8080:80 --name mdtopdf mdtopdf
+
+# Access the application
+# Open http://localhost:8080/mdtopdf/ in your browser
+```
+
+#### Using Docker Compose
+
+```bash
+# Start the application
+docker-compose up -d
+
+# Stop the application
+docker-compose down
+
+# Rebuild and restart
+docker-compose up -d --build
+
+# View logs
+docker-compose logs -f
+```
+
+Access the application at `http://localhost:8080/mdtopdf/`
+
+> **Note:** For development with hot-reload, you can copy `docker-compose.override.yml.example` to `docker-compose.override.yml` and run `docker-compose up`. This will mount your source files and run the dev server.
+
+#### Docker Management Commands
+
+```bash
+# View running containers
+docker ps
+
+# View logs
+docker logs mdtopdf
+
+# Stop the container
+docker stop mdtopdf
+
+# Start the container
+docker start mdtopdf
+
+# Remove the container
+docker rm mdtopdf
+
+# Remove the image
+docker rmi mdtopdf
+```
+
+#### Docker Architecture
+
+The Docker setup uses a **multi-stage build** for optimal image size:
+
+1. **Build Stage** - Uses `node:20-alpine` to install dependencies and build the application
+2. **Production Stage** - Uses `nginx:alpine` to serve the static files
+
+**Final image size:** ~45MB (compared to ~1GB if using Node.js to serve)
+
+The application runs on the `/mdtopdf` path, configured through:
+- Vite's `base` setting in `vite.config.ts`
+- Nginx configuration in `nginx.conf`
 
 ## 📖 Usage
 
@@ -81,14 +154,32 @@ This application uses a unique approach to PDF generation:
 - ✅ Clickable links preserved
 - ✅ Native browser rendering (no compatibility issues)
 
-## 📦 Dependencies
+## � Project Structure
+
+```
+mdtopdf/
+├── src/                    # React application source
+│   ├── App.tsx            # Main application component
+│   ├── main.tsx           # Application entry point
+│   └── index.css          # Global styles with Tailwind
+├── public/                # Static assets
+├── Dockerfile             # Multi-stage Docker build
+├── docker-compose.yml     # Docker Compose configuration
+├── nginx.conf             # Nginx configuration for serving app
+├── .dockerignore          # Files to exclude from Docker build
+├── vite.config.ts         # Vite configuration
+├── tsconfig.json          # TypeScript configuration
+└── package.json           # Project dependencies
+```
+
+## �📦 Dependencies
 
 ```json
 {
   "react": "^19.1.1",
   "react-dom": "^19.1.1",
-  "react-markdown": "^9.x",
-  "remark-gfm": "^4.x",
+  "react-markdown": "^10.1.0",
+  "remark-gfm": "^4.0.1",
   "tailwindcss": "^4.1.17"
 }
 ```
