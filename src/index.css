@@ -1,5 +1,20 @@
 @import "tailwindcss";
 
+/* Prevent page scrolling */
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* CodeMirror fixes */
+.cm-editor {
+  height: 100%;
+}
+
+.cm-scroller {
+  overflow: auto;
+}
+
 /* Custom prose styles for markdown preview */
 .prose {
   color: #1f2937;
@@ -59,6 +74,15 @@
   margin-bottom: 0.5em;
   line-height: 1.5;
   color: #64748b;
+}
+
+/* Remove top margin from first heading */
+.prose > h2:first-child,
+.prose > h3:first-child,
+.prose > h4:first-child,
+.prose > h5:first-child,
+.prose > h6:first-child {
+  margin-top: 0;
 }
 
 .prose p {
@@ -135,6 +159,12 @@
   margin-top: 0.25em;
   margin-bottom: 0.25em;
   line-height: 1.75;
+}
+
+.prose li > ul,
+.prose li > ol {
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
 }
 
 .prose blockquote {
@@ -240,6 +270,40 @@
   margin-bottom: 0.5555556em;
   line-height: 1.5555556;
   color: #64748b;
+}
+
+/* Page break support for .page-break */
+.page-break {
+  page-break-after: always;
+  break-after: page;
+  display: block;
+  height: 0;
+  margin: 0;
+  border: none;
+}
+
+/* Hide page break in preview, show only in print */
+@media screen {
+  .page-break {
+    border-top: 2px dashed #d1d5db;
+    height: 1px;
+    margin: 2em 0;
+  }
+  
+  .page-break::after {
+    content: "Page Break";
+    display: block;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 0.75rem;
+    margin-top: 0.5em;
+  }
+}
+
+@media print {
+  .page-break::after {
+    content: none;
+  }
 }
 
 /* Print styles */

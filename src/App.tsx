@@ -1,11 +1,6 @@
-import { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import remarkMath from 'remark-math';
-import rehypeKatex from 'rehype-katex';
-import rehypeRaw from 'rehype-raw';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { useState, useEffect, useCallback } from 'react';
+import Editor from './components/Editor';
+import Preview from './components/Preview';
 import 'katex/dist/katex.min.css';
 
 const defaultMarkdown = `# Welcome to Markdown to PDF
@@ -73,10 +68,24 @@ type View = 'both' | 'editor' | 'preview';
 
 function App() {
   const [markdown, setMarkdown] = useState(defaultMarkdown);
+  const [debouncedMarkdown, setDebouncedMarkdown] = useState(defaultMarkdown);
   const [activeView, setActiveView] = useState<View>('editor');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [documentTitle, setDocumentTitle] = useState('document');
   const [showClearModal, setShowClearModal] = useState(false);
+
+  // Memoize the markdown change handler
+  const handleMarkdownChange = useCallback((value: string) => {
+    setMarkdown(value);
+  }, []);
+
+  // Debounce markdown updates for preview (150ms delay)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedMarkdown(markdown);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [markdown]);
 
   const handleExportPDF = () => {
     // Update document title for PDF filename
@@ -131,7 +140,7 @@ function App() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-zinc-950 print:h-auto print:block">
+    <div className="h-screen flex flex-col bg-zinc-950 overflow-hidden print:h-auto print:block print:overflow-visible">
       {/* Header */}
       <header className="bg-zinc-900 border-b border-zinc-800 print:hidden">
         <div className="px-4 sm:px-6 py-3 sm:py-4">
@@ -287,63 +296,15 @@ function App() {
 
       {/* Main Content */}
       <div className="flex-1 flex overflow-hidden print:block print:overflow-visible">
-        {/* Editor */}
-        <div className={`flex-1 flex flex-col border-r border-zinc-800 print:hidden ${
-          activeView === 'preview' ? 'hidden lg:flex' : activeView === 'editor' ? 'flex' : 'flex'
-        }`}>
-          <div className="bg-zinc-900 px-4 sm:px-6 py-3 border-b border-zinc-800 hidden lg:block">
-            <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wide">
-              Editor
-            </h2>
-          </div>
-          <textarea
-            value={markdown}
-            onChange={(e) => setMarkdown(e.target.value)}
-            className="flex-1 bg-zinc-950 text-zinc-100 p-4 sm:p-6 font-mono text-sm resize-none focus:outline-none"
-            spellCheck={false}
-            placeholder="Start typing your markdown here..."
-          />
-        </div>
-
-        {/* Preview */}
-        <div className={`flex-1 flex flex-col print:block ${
-          activeView === 'editor' ? 'hidden lg:flex' : activeView === 'preview' ? 'flex' : 'flex'
-        }`}>
-          <div className="bg-zinc-900 px-4 sm:px-6 py-3 border-b border-zinc-800 print:hidden hidden lg:block">
-            <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-wide">
-              Preview
-            </h2>
-          </div>
-          <div className="flex-1 overflow-auto bg-white print:overflow-visible print:h-auto">
-            <div className="max-w-4xl mx-auto p-4 sm:p-8 prose prose-slate lg:prose-lg print:max-w-none print:p-0">
-              <ReactMarkdown 
-                remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeKatex, rehypeRaw]}
-                components={{
-                  code({ node, inline, className, children, ...props }: any) {
-                    const match = /language-(\w+)/.exec(className || '');
-                    return !inline && match ? (
-                      <SyntaxHighlighter
-                        style={oneDark}
-                        language={match[1]}
-                        PreTag="div"
-                        {...props}
-                      >
-                        {String(children).replace(/\n$/, '')}
-                      </SyntaxHighlighter>
-                    ) : (
-                      <code className={className} {...props}>
-                        {children}
-                      </code>
-                    );
-                  }
-                }}
-              >
-                {markdown}
-              </ReactMarkdown>
-            </div>
-          </div>
-        </div>
+        <Editor 
+          value={markdown}
+          onChange={handleMarkdownChange}
+          activeView={activeView}
+        />
+        <Preview 
+          markdown={debouncedMarkdown}
+          activeView={activeView}
+        />
       </div>
 
       {/* Clear Confirmation Modal */}
