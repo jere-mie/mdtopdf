@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
+import rehypeRaw from 'rehype-raw';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import 'katex/dist/katex.min.css';
 
 const defaultMarkdown = `# Welcome to Markdown to PDF
 
@@ -19,6 +25,21 @@ function hello() {
   console.log("Hello, World!");
 }
 \`\`\`
+
+### Math (LaTeX)
+Inline math: $E = mc^2$
+
+Block math:
+$$
+\\int_{-\\infty}^{\\infty} e^{-x^2} dx = \\sqrt{\\pi}
+$$
+
+### HTML Support
+You can use <span style="color: red; font-weight: bold;">HTML tags</span> directly!
+
+<div style="background-color: #f0f0f0; padding: 10px; border-radius: 5px; margin: 10px 0;">
+  <strong>Note:</strong> This is a custom HTML block with styling.
+</div>
 
 ### Lists
 1. First item
@@ -41,7 +62,9 @@ function hello() {
 | Live Preview | ✅ Done | High |
 | PDF Export | ✅ Done | High |
 | Tables | ✅ Done | Medium |
-| Syntax Highlighting | 🔄 Planned | Low |
+| Syntax Highlighting | ✅ Done | Medium |
+| LaTeX Math | ✅ Done | Medium |
+| HTML Passthrough | ✅ Done | Low |
 
 ---
 
@@ -55,11 +78,13 @@ function App() {
   const [activeView, setActiveView] = useState<View>('editor');
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [documentTitle, setDocumentTitle] = useState('document');
+  const [showClearModal, setShowClearModal] = useState(false);
 
   const handleExportPDF = () => {
     // Update document title for PDF filename
     const originalTitle = document.title;
-    document.title = documentTitle;
+    const filename = documentTitle.trim() || 'mdtopdf';
+    document.title = filename;
     window.print();
     // Restore original title after print dialog
     setTimeout(() => {
@@ -68,11 +93,12 @@ function App() {
   };
 
   const handleSaveMarkdown = () => {
+    const filename = documentTitle.trim() || 'mdtopdf';
     const blob = new Blob([markdown], { type: 'text/markdown' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${documentTitle}.md`;
+    a.download = `${filename}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -89,6 +115,21 @@ function App() {
       };
       reader.readAsText(file);
     }
+  };
+
+  const handleClear = () => {
+    if (markdown.trim()) {
+      setShowClearModal(true);
+    }
+  };
+
+  const confirmClear = () => {
+    setMarkdown('');
+    setShowClearModal(false);
+  };
+
+  const closeModal = () => {
+    setShowClearModal(false);
   };
 
   return (
@@ -130,6 +171,12 @@ function App() {
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 Export PDF
+              </button>
+              <button
+                onClick={handleClear}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Clear
               </button>
             </div>
 
@@ -191,6 +238,15 @@ function App() {
                 className="block w-full px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-center"
               >
                 📄 Export PDF
+              </button>
+              <button
+                onClick={() => {
+                  handleClear();
+                  setIsMenuOpen(false);
+                }}
+                className="block w-full px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-center"
+              >
+                🗑️ Clear
               </button>
             </div>
           )}
@@ -262,11 +318,79 @@ function App() {
           </div>
           <div className="flex-1 overflow-auto bg-white print:overflow-visible print:h-auto">
             <div className="max-w-4xl mx-auto p-4 sm:p-8 prose prose-slate lg:prose-lg print:max-w-none print:p-0">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>{markdown}</ReactMarkdown>
+              <ReactMarkdown 
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex, rehypeRaw]}
+                components={{
+                  code({ node, inline, className, children, ...props }: any) {
+                    const match = /language-(\w+)/.exec(className || '');
+                    return !inline && match ? (
+                      <SyntaxHighlighter
+                        style={oneDark}
+                        language={match[1]}
+                        PreTag="div"
+                        {...props}
+                      >
+                        {String(children).replace(/\n$/, '')}
+                      </SyntaxHighlighter>
+                    ) : (
+                      <code className={className} {...props}>
+                        {children}
+                      </code>
+                    );
+                  }
+                }}
+              >
+                {markdown}
+              </ReactMarkdown>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Clear Confirmation Modal */}
+      {showClearModal && (
+        <div 
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 print:hidden"
+          onClick={closeModal}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="bg-linear-to-r from-red-500 to-red-600 px-6 py-4">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                Clear All Content
+              </h3>
+            </div>
+            <div className="px-6 py-4">
+              <p className="text-gray-700 mb-2">
+                Are you sure you want to clear all content?
+              </p>
+              <p className="text-gray-500 text-sm">
+                This action cannot be undone. Make sure you've saved your work if needed.
+              </p>
+            </div>
+            <div className="px-6 py-4 bg-gray-50 flex gap-3 justify-end">
+              <button
+                onClick={closeModal}
+                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmClear}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                Clear All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

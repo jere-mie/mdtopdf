@@ -19,8 +19,8 @@
 .prose h2 {
   font-size: 1.375em;
   font-weight: 700;
-  margin-top: 2em;
-  margin-bottom: 1em;
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
   line-height: 1.3333333;
   color: #111827;
 }
@@ -28,15 +28,42 @@
 .prose h3 {
   font-size: 1.125em;
   font-weight: 600;
-  margin-top: 1.6em;
-  margin-bottom: 0.6em;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
   line-height: 1.6;
   color: #111827;
 }
 
-.prose p {
+.prose h4 {
+  font-size: 1em;
+  font-weight: 600;
   margin-top: 1.25em;
-  margin-bottom: 1.25em;
+  margin-bottom: 0.5em;
+  line-height: 1.5;
+  color: #111827;
+}
+
+.prose h5 {
+  font-size: 0.875em;
+  font-weight: 600;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+  line-height: 1.5;
+  color: #111827;
+}
+
+.prose h6 {
+  font-size: 0.875em;
+  font-weight: 500;
+  margin-top: 1.25em;
+  margin-bottom: 0.5em;
+  line-height: 1.5;
+  color: #64748b;
+}
+
+.prose p {
+  margin-top: 0.85em;
+  margin-bottom: 0.85em;
   line-height: 1.75;
 }
 
@@ -72,8 +99,8 @@
   font-weight: 400;
   font-size: 0.8125em;
   line-height: 1.7142857;
-  margin-top: 1.7142857em;
-  margin-bottom: 1.7142857em;
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
   border-radius: 0.375rem;
   padding: 1em 1.5em;
 }
@@ -91,22 +118,22 @@
 }
 
 .prose ul {
-  margin-top: 1.25em;
-  margin-bottom: 1.25em;
+  margin-top: 0.85em;
+  margin-bottom: 0.85em;
   padding-left: 1.625em;
   list-style-type: disc;
 }
 
 .prose ol {
-  margin-top: 1.25em;
-  margin-bottom: 1.25em;
+  margin-top: 0.85em;
+  margin-bottom: 0.85em;
   padding-left: 1.625em;
   list-style-type: decimal;
 }
 
 .prose li {
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
+  margin-top: 0.25em;
+  margin-bottom: 0.25em;
   line-height: 1.75;
 }
 
@@ -190,15 +217,38 @@
   line-height: 1.5;
 }
 
+.prose-lg h4 {
+  font-size: 1.05em;
+  font-weight: 600;
+  margin-top: 1.5555556em;
+  margin-bottom: 0.5555556em;
+  line-height: 1.5555556;
+}
+
+.prose-lg h5 {
+  font-size: 0.95em;
+  font-weight: 600;
+  margin-top: 1.5555556em;
+  margin-bottom: 0.5555556em;
+  line-height: 1.5555556;
+}
+
+.prose-lg h6 {
+  font-size: 0.95em;
+  font-weight: 500;
+  margin-top: 1.5555556em;
+  margin-bottom: 0.5555556em;
+  line-height: 1.5555556;
+  color: #64748b;
+}
+
 /* Print styles */
 @media print {
   @page {
     margin: 0.75in;
   }
 
-  * {
-    overflow: visible !important;
-  }
+  /* Remove global overflow rule that breaks KaTeX */
 
   body {
     print-color-adjust: exact;
@@ -246,4 +296,11 @@
     orphans: 3;
     widows: 3;
   }
+
+  /* KaTeX math rendering fixes for print - minimal interference */
+  .katex-display {
+    page-break-inside: avoid;
+  }
+
+  /* Preserve KaTeX's default rendering - don't override display or overflow */
 }
