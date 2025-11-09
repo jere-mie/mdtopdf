@@ -66,8 +66,6 @@ You can use <span style="color: red; font-weight: bold;">HTML tags</span> direct
 | LaTeX Math | ✅ Done | Medium |
 | HTML Passthrough | ✅ Done | Low |
 
----
-
 Happy writing!
 `;
 
